@@ -5,6 +5,7 @@ import { getConnections } from '../services/apiManager.service';
 import { getStagingEntries } from '../services/staging.service';
 
 import VirtualizedDataTable from '../components/VirtualizedDataTable';
+import QueryFailure from '../components/QueryFailure';
 
 
 const OPERATORS = [
@@ -29,19 +30,6 @@ const initialDraftFilter = {
 
 const RECORD_TYPES = { form: 'Formulario principal', child: 'Formulario hijo', branch: 'Rama' };
 
-function getErrorMessage(error) {
-    const errors = error?.payload?.errors;
-
-    if (Array.isArray(errors)) {
-        return errors.join(' ');
-    }
-
-    return (
-        error?.payload?.detail ||
-        error?.message ||
-        'No fue posible consultar los registros.'
-    );
-}
 
 
 export default function DataExplorer() {
@@ -240,11 +228,7 @@ export default function DataExplorer() {
     if (connectionsQuery.isError) {
         return (
             <main className='min-h-screen bg-slate-100 p-6'>
-                <div className='rounded-lg border border-red-200 bg-red-50 p-4 text-red-800'>
-                    {getErrorMessage(
-                        connectionsQuery.error,
-                    )}
-                </div>
+                <QueryFailure query={connectionsQuery} label='las conexiones' />
             </main>
         );
     }
@@ -588,7 +572,7 @@ export default function DataExplorer() {
                             </h2>
 
                             <p className='text-sm text-slate-500'>
-                                {pagination.total}{' '}
+                                {stagingData ? pagination.total : '—'}{' '}
                                 registros encontrados
                             </p>
                         </div>
@@ -609,11 +593,7 @@ export default function DataExplorer() {
                             Cargando registros…
                         </p>
                     ) : stagingQuery.isError ? (
-                        <div className='rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800'>
-                            {getErrorMessage(
-                                stagingQuery.error,
-                            )}
-                        </div>
+                        <QueryFailure query={stagingQuery} label='los registros' />
                     ) : (
                         <>
                         {rows.length === 0 && <p className='mb-3 text-sm text-slate-500'>No hay registros que coincidan con la consulta.</p>}

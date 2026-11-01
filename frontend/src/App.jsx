@@ -5,6 +5,7 @@ import ApiManager from "./pages/ApiManager";
 import DataExplorer from "./pages/DataExplorer";
 import Dashboard from "./pages/Dashboard";
 import SurveyAudit from "./pages/SurveyAudit";
+import ModuleBoundary from './components/ModuleBoundary';
 
 import "./App.css";
 
@@ -65,11 +66,15 @@ export default function App() {
                 </div>
             </nav>
 
+            <ModuleBoundary key={activeModule} module={activeModule} label={
+                { audit: 'la auditoría', dashboard: 'el cuadro de mando', 'api-manager': 'API Manager', 'data-explorer': 'el explorador de datos' }[activeModule]
+            }>
             {activeModule === 'audit' ? <SurveyAudit /> : activeModule === 'dashboard' ? <Dashboard /> : activeModule === 'api-manager' ? (
                 <ApiManager />
             ) : (
                 <DataExplorer />
             )}
+            </ModuleBoundary>
         </div>
     );
 }

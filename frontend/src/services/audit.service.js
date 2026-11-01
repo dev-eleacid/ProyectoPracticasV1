@@ -1,11 +1,12 @@
-import { apiRequest } from './api.service';
+import { apiRequest } from './api.service.js';
+import { validAudit, validRefresh } from './responseValidation.js';
 export function getAudit(connectionId, filters) {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(filters)) {
         if (value !== '' && value !== undefined) params.set(key, String(value));
     }
-    return apiRequest(`/audit/connections/${connectionId}?${params}`);
+    return apiRequest(`/audit/connections/${connectionId}?${params}`, {}, validAudit);
 }
 export function refreshAudit(connectionId) {
-    return apiRequest(`/audit/connections/${connectionId}/refresh`, { method: 'POST' });
+    return apiRequest(`/audit/connections/${connectionId}/refresh`, { method: 'POST' }, validRefresh);
 }

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getConnections } from '../services/apiManager.service';
 import { getAudit, refreshAudit } from '../services/audit.service';
 import VirtualizedDataTable from '../components/VirtualizedDataTable';
+import QueryFailure from '../components/QueryFailure';
 
 const INITIAL = { surveyor_id: '', date_from: '', date_to: '', date_field: 'created_at_epicollect', validation_status: '', audit_status: '' };
 const AUDIT_LABELS = { identified: 'Identificado', anonymous: 'Anónimo en el origen', pending: 'Pendiente de consultar', stale: 'Requiere nueva consulta' };
@@ -37,7 +38,7 @@ function AuditPanel({ connection }) {
     const rows = (data?.rows || []).map((row) => ({ ...row, audit_status_label: AUDIT_LABELS[row.audit_status],
         validation_status_label: VALIDATION_LABELS[row.validation_status] || row.validation_status }));
     const setField = (field) => (event) => setDraft((old) => ({ ...old, [field]: event.target.value }));
-    const errorMessage = query.error?.message || refresh.error?.message;
+    const errorMessage = refresh.error?.message;
     return <>
         <section className='flex flex-wrap items-center justify-between gap-4 rounded-xl bg-white p-5 shadow-sm'>
             <div><h2 className='font-semibold'>Identidad de los registros</h2>
@@ -47,6 +48,7 @@ function AuditPanel({ connection }) {
                 onClick={() => refresh.mutate()}>{refresh.isPending ? 'Consultando identidad…' : 'Actualizar identidades'}</button>
         </section>
         <div aria-live='polite'>
+            {query.isError && <QueryFailure query={query} label='la auditoría' />}
             {errorMessage && <p role='alert' className='rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950'>{errorMessage}</p>}
             {refresh.isSuccess && <p className='rounded-lg bg-emerald-50 p-4 text-sm text-emerald-900'>Consulta terminada: {refresh.data.data.matched} registros vinculados; {refresh.data.data.unmatched} sin coincidencia de registro y versión. Los registros sin coincidencia requieren sincronizar las respuestas y volver a consultar.</p>}
         </div>
@@ -83,8 +85,8 @@ export default function SurveyAudit() {
     const connection = items.find((c) => c.id === selected) || items[0];
     return <main className='mx-auto max-w-7xl space-y-5 px-6 py-8'>
         <header><h1 className='text-2xl font-semibold text-slate-900'>Auditoría por encuestador</h1><p className='mt-1 text-slate-600'>Trazabilidad de capturas y seguimiento de su validación.</p></header>
-        {connections.isError && <p role='alert'>{connections.error.message}</p>}
-        {connections.isPending ? <p>Cargando conexiones…</p> : !connection ? <p>Registra y sincroniza una conexión para comenzar.</p> : <>
+        {connections.isError && <QueryFailure query={connections} label='las conexiones' />}
+        {connections.isPending ? <p>Cargando conexiones…</p> : !connection ? (connections.isError ? null : <p>Registra y sincroniza una conexión para comenzar.</p>) : <>
             <label className='block rounded-xl bg-white p-5 text-sm shadow-sm'>Conexión<select className={inputClass} value={connection.id} onChange={(e) => setSelected(e.target.value)}>{items.map((c) => <option value={c.id} key={c.id}>{c.name} · {c.project_slug}</option>)}</select></label>
             <AuditPanel key={connection.id} connection={connection} />
         </>}

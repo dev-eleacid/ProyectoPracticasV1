@@ -1,4 +1,5 @@
-import { apiRequest } from './api.service';
+import { apiRequest } from './api.service.js';
+import { validStaging } from './responseValidation.js';
 
 export function getStagingEntries({
     projectSlug,
@@ -36,6 +37,7 @@ export function getStagingEntries({
     }
     return apiRequest(
         `/staging/entries?${params.toString()}`,
+        {}, validStaging,
     );
 }
 

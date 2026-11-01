@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import QueryFailure from '../components/QueryFailure';
+import { getRequestErrorMessage as getErrorMessage } from '../services/requestError.js';
 
 import {
     activateConnection,
@@ -51,15 +53,6 @@ function oauthStatusLabel(connection) {
     return labels[connection.oauth_status] || 'Pendiente';
 }
 
-function getErrorMessage(error) {
-    const errors = error?.payload?.errors;
-
-    if (Array.isArray(errors) && errors.length > 0) {
-        return errors.map((item) => item.message).join('  ');
-    }
-
-    return error?.payload?.detail || error?.message || 'Error desconocido.';
-}
 
 export default function ApiManager() {
     const queryClient = useQueryClient();
@@ -97,6 +90,7 @@ export default function ApiManager() {
         queryClient.invalidateQueries({ queryKey: ['api-connections'] });
         queryClient.invalidateQueries({ queryKey: ['sync-logs'] });
         queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        queryClient.invalidateQueries({ queryKey: ['sync-scheduler'] });
     }
 
     const createMutation = useMutation({
@@ -309,25 +303,30 @@ export default function ApiManager() {
                         validar Conectividad, ejecutar Sincronizaciones y revisar logs
                         operativos.
                     </p>
+                    <button type='button' className='mt-3 rounded-lg border border-slate-400 bg-white px-4 py-2 text-sm disabled:opacity-50'
+                        disabled={connectionsQuery.isFetching || syncLogsQuery.isFetching || schedulerQuery.isFetching}
+                        onClick={invalidateApiManagerQueries}>Actualizar datos</button>
                 </header>
 
                 <section className='grid gap-4 md:grid-cols-3'>
                     <article className='rounded-xl bg-white p-4 shadow-sm'>
                         <p className='text-sm text-slate-500'>Conexiones registradas</p>
-                        <p className='mt-2 text-3xl font-bold'>{connections.length}</p>
+                        <p className='mt-2 text-3xl font-bold'>{connectionsQuery.data ? connections.length : '—'}</p>
                     </article>
 
                     <article className='rounded-xl bg-white p-4 shadow-sm'>
                         <p className='text-sm text-slate-500'>Conexiones activas</p>
-                        <p className='mt-2 text-3xl font-bold'>{activeConnectionsCount}</p>
+                        <p className='mt-2 text-3xl font-bold'>{connectionsQuery.data ? activeConnectionsCount : '—'}</p>
                     </article>
 
                     <article className='rounded-xl bg-white p-4 shadow-sm'>
                         <p className='text-sm text-slate-500'>Últimos logs visibles</p>
-                        <p className='mt-2 text-3xl font-bold'>{logs.length}</p>
+                        <p className='mt-2 text-3xl font-bold'>{syncLogsQuery.data ? logs.length : '—'}</p>
                     </article>
                 </section>
 
+                {connectionsQuery.isError && <QueryFailure query={connectionsQuery} label='las conexiones' retryLabel='Reintentar conexiones' />}
+                {schedulerQuery.isError && <QueryFailure query={schedulerQuery} label='la programación' retryLabel='Reintentar programación' />}
                 {operationMessage && (
                     <div className={`rounded-lg border p-4 text-sm ${
                         operationMessage.type === 'success'
@@ -577,6 +576,8 @@ export default function ApiManager() {
 
                         {isLoading ? (
                             <p className='text-sm text-slate-500'>Cargando datos...</p>
+                        ) : connectionsQuery.isError && !connectionsQuery.data ? (
+                            <p>No hay una lista de conexiones confirmada para mostrar.</p>
                         ) : connections.length === 0 ? (
                             <p className='text-sm text-slate-500'>
                                 No hay conexiones registradas
@@ -733,7 +734,8 @@ export default function ApiManager() {
                     </p>
                 </div>
 
-                {logs.length === 0 ? (
+                {syncLogsQuery.isError && <QueryFailure query={syncLogsQuery} label='el historial' retryLabel='Reintentar historial' />}
+                {syncLogsQuery.isError && !syncLogsQuery.data ? <p>El historial no está disponible.</p> : logs.length === 0 ? (
                     <p className='text-sm text-slate-500'>
                         Todavía no hay logs registrados
                     </p>

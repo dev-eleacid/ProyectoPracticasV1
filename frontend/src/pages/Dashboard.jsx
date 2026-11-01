@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getDashboard } from '../services/dashboard.service';
+import QueryFailure from '../components/QueryFailure';
 
 const STATUS = { success: 'Correcta', failed: 'Fallida', partial: 'Parcial', running: 'En ejecución' };
 const VALIDATION = { unvalidated: 'Sin validar', validated: 'Validado', rejected: 'Rechazado' };
@@ -41,10 +42,7 @@ export default function Dashboard() {
         </div>
 
         {query.isPending && <p role='status'>Consultando el estado de la operación…</p>}
-        {query.isError && <p role='alert' className='rounded-lg border border-red-200 bg-red-50 p-4 text-red-800'>
-            No fue posible actualizar el cuadro de mando. Intenta nuevamente.
-            {data && ' Se muestran los últimos datos consultados.'}
-        </p>}
+        {query.isError && <QueryFailure query={query} label='el cuadro de mando' />}
 
         {data && <>
             <p className='text-sm text-slate-500'>Última consulta: {new Date(data.generatedAt).toLocaleString('es-MX')}.

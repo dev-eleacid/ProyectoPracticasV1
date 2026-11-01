@@ -23,4 +23,8 @@ export default defineConfig([
   },
 
   prettier,
+  {
+    files: ['test/**/*.{js,mjs}'],
+    languageOptions: { globals: globals.node },
+  },
 ]);
