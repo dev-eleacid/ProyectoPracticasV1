@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:volume": "vite build --config vite.volume.config.js",
+    "preview:volume": "vite preview --config vite.volume.config.js",
     "lint": "eslint .",
     "test": "node --test test/*.test.js",
     "preview": "vite preview",

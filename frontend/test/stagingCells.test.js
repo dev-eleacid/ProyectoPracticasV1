@@ -25,3 +25,11 @@ test('representa ubicación y fechas de captura sin alterar su formato declarado
     assert.equal(formatCellValue('21/10/2026', { type: 'date' }), '21/10/2026');
     assert.equal(formatCellValue('foto.jpg', { type: 'media' }), 'foto.jpg');
 });
+
+test('el formato de fechas de sistema conserva la fecha, hora y zona locales y los valores inválidos', () => {
+    for (const value of ['2026-10-01T00:00:00Z', '2026-10-01T23:59:59Z', '2026-04-05T12:30:01+03:00']) {
+        assert.equal(formatCellValue(value, { type: 'datetime' }), new Date(value).toLocaleString());
+    }
+    assert.equal(formatCellValue('sin fecha', { type: 'datetime' }), 'sin fecha');
+    assert.equal(formatCellValue(null, { type: 'datetime' }), '-');
+});

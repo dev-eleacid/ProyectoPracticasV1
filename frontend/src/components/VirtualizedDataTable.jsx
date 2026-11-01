@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { getCellValue, formatCellValue } from '../utils/stagingCells';
 
@@ -11,14 +11,15 @@ export default function VirtualizedDataTable({
     resetKey,
 }) {
     const scrollContainerRef = useRef(null);
+    const getItemKey = useCallback((index) =>
+        rows[index]?.row_key ?? rows[index]?.ec5_uuid ?? index, [rows]);
 
     const rowVirtualizer = useVirtualizer({
         count: rows.length,
         getScrollElement: () =>
             scrollContainerRef.current,
         estimateSize: () => ROW_HEIGHT,
-        getItemKey: (index) =>
-            rows[index]?.row_key ?? rows[index]?.ec5_uuid ?? index,
+        getItemKey,
         overscan: OVERSCAN,
         useFlushSync: false,
     });

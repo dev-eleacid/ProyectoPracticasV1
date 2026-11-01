@@ -1,4 +1,8 @@
 const RECORD_TYPES = { form: 'Formulario principal', child: 'Formulario hijo', branch: 'Rama' };
+const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+    year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', second: 'numeric',
+});
 
 export function getCellValue(row, column) {
     if (column.key === 'record_type') return RECORD_TYPES[row.record_type] || row.record_type;
@@ -22,7 +26,7 @@ export function formatCellValue(value, column) {
     }
     if (column.type === 'datetime') {
         const date = new Date(value);
-        if (!Number.isNaN(date.getTime())) return date.toLocaleString();
+        if (!Number.isNaN(date.getTime())) return dateTimeFormatter.format(date);
     }
     if (typeof value === 'boolean') return value ? 'Sí' : 'No';
     if (typeof value === 'object') return JSON.stringify(value);
